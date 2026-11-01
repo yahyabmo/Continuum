@@ -29,6 +29,15 @@ make setup
 make check
 ```
 
+## Voir la page de démonstration
+
+```bash
+make planes-demo
+make web
+```
+
+Elle montre un clip de synthèse en 64 plans. Aucun chiffre n'en sort.
+
 ## Licence
 
 Le code est sous licence MIT. Les modèles tiers gardent leur propre licence, voir [NOTICES](NOTICES). Le projet est non commercial.

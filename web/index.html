@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Continuum</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="Vidéo empilée en plans le long du temps"></canvas>
+    <aside class="panel">
+      <h1>Continuum</h1>
+      <p class="tag">Démo : aperçu en plans, rien n'est mesuré ici.</p>
+      <label>
+        Espacement
+        <input id="spacing" type="range" min="0.2" max="3" step="0.05" value="1" />
+      </label>
+      <label>
+        Opacité
+        <input id="opacity" type="range" min="0.05" max="1" step="0.01" value="0.45" />
+      </label>
+      <p class="axis" id="axis"></p>
+    </aside>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

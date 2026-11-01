@@ -1,6 +1,6 @@
 PYTHON := .venv/bin/python
 
-.PHONY: setup check take crossfade demo
+.PHONY: setup check take crossfade demo planes-demo web
 
 setup:
 	python3 -m venv .venv
@@ -18,3 +18,9 @@ crossfade:
 
 demo:
 	$(PYTHON) -m continuum.bench --demo
+
+planes-demo:
+	$(PYTHON) -m continuum.planes --demo
+
+web:
+	cd web && npm install && npm run dev

@@ -13,6 +13,7 @@ __pycache__/
 # Site
 node_modules/
 web/dist/
+web/public/clips/
 
 # Clips bruts et artefacts de calcul
 data/

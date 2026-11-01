@@ -1,0 +1,78 @@
+:root {
+  --ground: #000;
+  --ink: #e8e6df;
+  --muted: #8d8b84;
+  --line: #2b2a27;
+  --panel: rgb(14 14 13 / 82%);
+  --accent: #d9b35b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 15px/1.45 system-ui, sans-serif;
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.panel {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: min(260px, calc(100vw - 32px));
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tag {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.axis {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}

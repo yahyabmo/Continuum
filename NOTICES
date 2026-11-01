@@ -1,5 +1,16 @@
 Le code de ce dépôt est sous licence MIT, voir LICENSE.
 
-Aucun poids de modèle ni aucun code tiers n'est inclus dans ce dépôt pour l'instant.
-Les poids seront téléchargés à l'exécution depuis leur source officielle, jamais
-redistribués ici. Chaque modèle utilisé sera listé dans ce fichier avec sa licence.
+Aucun poids de modèle ni aucun code tiers n'est inclus dans ce dépôt. Les poids sont
+téléchargés à l'exécution depuis leur source officielle, jamais redistribués ici.
+
+Modèles utilisés :
+
+- Practical-RIFE 4.25, hzwer, MIT, code et poids.
+- SEA-RAFT, Princeton Vision & Learning Lab, BSD-3-Clause, code et poids.
+- RAFT de torchvision, BSD-3-Clause.
+
+Bibliothèques principales :
+
+- three.js, MIT.
+- PyAV, BSD-3-Clause, avec FFmpeg.
+- OpenCV, Apache-2.0.
