@@ -3,7 +3,7 @@ import json
 import cv2
 import numpy as np
 
-from continuum.planes import COLUMNS, COUNT, atlas, export, stride
+from continuum.planes import COLUMNS, COUNT, atlas, export, rough_alpha, stride
 from continuum.prep import HEIGHT, WIDTH
 from continuum.synth import toy_take
 from continuum.timeaxis import Clip
@@ -28,6 +28,23 @@ def test_the_background_is_transparent_and_the_body_is_not():
     sheet = atlas(toy_take(n_frames=128, noise=0.0))
     assert sheet[4, 4, 3] == 0
     assert sheet[HEIGHT // 2, WIDTH // 2, 3] == 255
+
+
+def test_the_alpha_does_not_spill_onto_the_background():
+    plate = np.zeros((64, 64, 3), dtype=np.uint8)
+    frame = plate.copy()
+    frame[20:44, 20:44] = 200
+    alpha = rough_alpha(frame, plate)
+    assert alpha[32, 32] == 255
+    assert alpha[32, 17] == 0
+    assert alpha[32, 46] == 0
+
+
+def test_a_speck_of_noise_stays_transparent():
+    plate = np.zeros((64, 64, 3), dtype=np.uint8)
+    frame = plate.copy()
+    frame[10, 10] = 200
+    assert rough_alpha(frame, plate).max() == 0
 
 
 def test_export_writes_what_the_page_reads(tmp_path):

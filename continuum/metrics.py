@@ -39,12 +39,17 @@ class PooledPsnr:
         return psnr(self.squared_error / self.values) if self.values else None
 
 
-def person_mask(frame: np.ndarray, plate: np.ndarray) -> np.ndarray:
-    """Pixels that differ from the empty background, dilated."""
+def foreground(frame: np.ndarray, plate: np.ndarray) -> np.ndarray:
+    """Pixels that differ from the empty background."""
     difference = np.abs(frame.astype(np.int16) - plate.astype(np.int16)).max(axis=2)
+    return difference > PERSON_THRESHOLD
+
+
+def person_mask(frame: np.ndarray, plate: np.ndarray) -> np.ndarray:
+    """The foreground, dilated: scoring must not miss the edges of the person."""
     size = 2 * PERSON_DILATION + 1
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (size, size))
-    return cv2.dilate((difference > PERSON_THRESHOLD).astype(np.uint8), kernel).astype(bool)
+    return cv2.dilate(foreground(frame, plate).astype(np.uint8), kernel).astype(bool)
 
 
 def motion_mask(person: np.ndarray, flow_magnitude: np.ndarray) -> np.ndarray:

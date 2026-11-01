@@ -15,14 +15,15 @@ import cv2
 import numpy as np
 
 from continuum.bench import raw_path
-from continuum.metrics import person_mask
+from continuum.metrics import foreground
 from continuum.prep import FPS, Take, normalise
 from continuum.synth import toy_take
 from continuum.timeaxis import Clip, Grid
 
 COUNT = 64
 COLUMNS = 8
-SOFTNESS = 5
+EDGE = 3
+SOFTNESS = 1.0
 QUALITY = 90
 
 
@@ -32,7 +33,10 @@ def stride(n_frames: int, count: int = COUNT) -> int:
 
 
 def rough_alpha(frame: np.ndarray, plate: np.ndarray) -> np.ndarray:
-    mask = person_mask(frame, plate).astype(np.uint8) * 255
+    """A tight mask, so that no ring of the background shows on another colour."""
+    mask = foreground(frame, plate).astype(np.uint8) * 255
+    kernel = np.ones((EDGE, EDGE), dtype=np.uint8)
+    mask = cv2.erode(cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel), kernel)
     return cv2.GaussianBlur(mask, (0, 0), SOFTNESS)
 
 
