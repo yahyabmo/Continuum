@@ -1,0 +1,59 @@
+import numpy as np
+
+from continuum.baselines import brackets, crossfade
+from continuum.bench import noise_ceiling, score_crossfade, table
+from continuum.flow import dis_magnitude
+from continuum.metrics import beta, motion_mask, person_mask
+from continuum.synth import toy_take
+from continuum.timeaxis import split
+
+
+def test_crossfade_is_scored_on_every_moving_held_frame():
+    take = toy_take(n_frames=60)
+    row = score_crossfade("toy", take)
+    assert row["held"] == 29
+    assert 0 < row["scored"] <= 29
+    assert row["psnr_m"] < row["noise_ceiling"]
+
+
+def test_the_motion_mask_makes_the_task_harder_than_the_full_image():
+    row = score_crossfade("toy", toy_take(n_frames=60))
+    assert row["psnr_m"] < row["psnr_full"]
+
+
+def test_a_faster_gesture_is_harder_for_the_crossfade():
+    slow = score_crossfade("slow", toy_take(n_frames=60, speed=2.0))
+    fast = score_crossfade("fast", toy_take(n_frames=60, speed=6.0))
+    assert fast["psnr_m"] < slow["psnr_m"]
+
+
+def test_the_ceiling_follows_the_sensor_noise():
+    assert noise_ceiling(toy_take(n_frames=60, noise=1.0)) > noise_ceiling(
+        toy_take(n_frames=60, noise=4.0)
+    )
+
+
+def test_beta_separates_the_crossfade_from_the_truth_on_the_toy():
+    take = toy_take(n_frames=60)
+    train, held = split(60, 2)
+    before, frame, after, tau = brackets(train, held)[10]
+    truth = take.frames[frame]
+    faded = crossfade(take.frames[before], take.frames[after], tau)
+    mask = motion_mask(
+        person_mask(truth, take.plate), dis_magnitude(take.frames[before], take.frames[after])
+    )
+    assert mask.any()
+    assert beta(faded, truth, faded, mask) == 1.0
+    assert beta(truth.astype(np.float32), truth, faded, mask) == 0.0
+
+
+def test_the_table_shows_a_missing_value():
+    row = {
+        "clip": "C1",
+        "frames": 600,
+        "scored": 0,
+        "psnr_m": None,
+        "psnr_full": 30.0,
+        "noise_ceiling": 40.0,
+    }
+    assert "n/a" in table([row])

@@ -43,9 +43,7 @@ def test_volume_slices_are_the_even_frames():
     clip = Clip(Fraction(60), 600, {"volume": grid("volume")})
     train, _ = split(clip.n_frames, 2)
     assert len(train) == clip.grids["volume"].n
-    assert all(
-        clip.frames.time(i) == clip.grids["volume"].time(k) for k, i in enumerate(train)
-    )
+    assert all(clip.frames.time(i) == clip.grids["volume"].time(k) for k, i in enumerate(train))
 
 
 def test_json_round_trip(tmp_path):
