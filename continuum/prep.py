@@ -1,7 +1,7 @@
 """Turn a raw phone take into frames ready for measurement.
 
-A take starts with an empty background, then holds the clip itself. A dropped
-frame would shift the truth of a held-out frame, so a take is checked before use.
+A take starts with an empty background, then holds the clip itself. An uneven frame
+rate would shift the truth of a held-out frame, so a take is checked before use.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ class Probe:
     height: int
     n_frames: int
     fps: float
-    dropped: float
+    irregular: float
     transfer: int
 
     @property
@@ -41,6 +41,15 @@ class Take:
     plate: np.ndarray
 
 
+def timing(gaps: np.ndarray) -> tuple[float, float]:
+    """Frame rate, and share of the gaps between frames that stray from the usual one.
+
+    The first gap is a start-up delay of the camera, and the lead is cut anyway.
+    """
+    median = float(np.median(gaps))
+    return 1 / median, float(np.mean(np.abs(gaps[1:] / median - 1) > 0.25))
+
+
 def probe(path: Path) -> Probe:
     with av.open(str(path)) as container:
         stream = container.streams.video[0]
@@ -48,8 +57,7 @@ def probe(path: Path) -> Probe:
         container.seek(0)
         pts = sorted(p.pts for p in container.demux(stream) if p.pts is not None)
         time_base = float(stream.time_base)
-    gaps = np.diff(np.array(pts, dtype=np.float64)) * time_base
-    median = float(np.median(gaps))
+    fps, irregular = timing(np.diff(np.array(pts, dtype=np.float64)) * time_base)
     width, height = first.width, first.height
     if first.rotation % 180:
         width, height = height, width
@@ -57,8 +65,8 @@ def probe(path: Path) -> Probe:
         width=width,
         height=height,
         n_frames=len(pts),
-        fps=1 / median,
-        dropped=float(np.mean(gaps > 1.5 * median)),
+        fps=fps,
+        irregular=irregular,
         transfer=first.color_trc,
     )
 
@@ -68,8 +76,8 @@ def check(p: Probe, seconds: float = LEAD_SECONDS + CLIP_SECONDS) -> list[str]:
     problems = []
     if abs(p.fps - FPS) > 1:
         problems.append(f"{p.fps:.2f} fps instead of {FPS}")
-    if p.dropped > 0.002:
-        problems.append(f"{p.dropped:.2%} of the frames were dropped")
+    if p.irregular > 0.002:
+        problems.append(f"{p.irregular:.1%} of the frame gaps are irregular")
     if p.transfer in HDR_TRANSFERS:
         problems.append(f"HDR video ({HDR_TRANSFERS[p.transfer]})")
     if p.height <= p.width:
@@ -123,7 +131,7 @@ def main() -> None:
     path = Path(sys.argv[1])
     p = probe(path)
     print(f"{path.name}: {p.width}x{p.height}, {p.fps:.2f} fps, {p.seconds:.1f} s")
-    print(f"dropped frames: {p.dropped:.2%}, transfer: {p.transfer}")
+    print(f"irregular gaps: {p.irregular:.1%}, transfer: {p.transfer}")
     problems = check(p)
     print("usable" if not problems else "\n".join(f"problem: {x}" for x in problems))
 

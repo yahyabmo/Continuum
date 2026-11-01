@@ -12,12 +12,13 @@ from continuum.prep import (
     check,
     normalise,
     probe,
+    timing,
     upright,
 )
 
 
 def fine(**changes) -> Probe:
-    values = dict(width=1080, height=1920, n_frames=800, fps=60.0, dropped=0.0, transfer=1)
+    values = dict(width=1080, height=1920, n_frames=800, fps=60.0, irregular=0.0, transfer=1)
     return Probe(**{**values, **changes})
 
 
@@ -46,7 +47,7 @@ def test_a_good_take_has_no_problem():
     "changes, word",
     [
         ({"fps": 30.0}, "fps"),
-        ({"dropped": 0.01}, "dropped"),
+        ({"irregular": 0.01}, "irregular"),
         ({"transfer": 16}, "HDR"),
         ({"width": 1920, "height": 1080}, "vertical"),
         ({"width": 180, "height": 320}, "small"),
@@ -96,3 +97,22 @@ def test_a_half_turn_is_the_same_in_both_directions():
     image = np.arange(6, dtype=np.uint8).reshape(2, 3)
     assert np.array_equal(upright(image, 180), upright(image, -180))
     assert np.array_equal(upright(image, 0), image)
+
+
+def test_a_steady_rate_has_no_irregular_gap():
+    fps, irregular = timing(np.full(600, 1 / 60))
+    assert fps == pytest.approx(60)
+    assert irregular == 0
+
+
+def test_the_start_up_delay_of_the_camera_does_not_count():
+    gaps = np.concatenate(([0.192], np.full(600, 1 / 60)))
+    assert timing(gaps)[1] == 0
+
+
+def test_a_rate_that_switches_between_30_and_60_fps_is_caught():
+    gaps = np.concatenate((np.full(170, 1 / 30), np.full(130, 1 / 60)))
+    fps, irregular = timing(gaps)
+    assert fps == pytest.approx(30)
+    assert irregular == pytest.approx(130 / 299)
+    assert any("irregular" in problem for problem in check(fine(irregular=irregular)))
