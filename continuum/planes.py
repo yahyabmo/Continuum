@@ -25,6 +25,7 @@ COLUMNS = 8
 EDGE = 3
 SOFTNESS = 1.0
 QUALITY = 90
+LOSSLESS = 101
 
 
 def stride(n_frames: int, count: int = COUNT) -> int:
@@ -58,8 +59,11 @@ def export(take: Take, out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
     n_frames, height, width, _ = take.frames.shape
     step = Fraction(stride(n_frames), FPS)
-    bgra = cv2.cvtColor(atlas(take), cv2.COLOR_RGBA2BGRA)
-    cv2.imwrite(str(out / "atlas.webp"), bgra, [cv2.IMWRITE_WEBP_QUALITY, QUALITY])
+    sheet = atlas(take)
+    bgr = cv2.cvtColor(sheet[..., :3], cv2.COLOR_RGB2BGR)
+    cv2.imwrite(str(out / "atlas.webp"), bgr, [cv2.IMWRITE_WEBP_QUALITY, QUALITY])
+    # The mask is lossless: a faint residue would tint the whole plane.
+    cv2.imwrite(str(out / "mask.webp"), sheet[..., 3], [cv2.IMWRITE_WEBP_QUALITY, LOSSLESS])
     clip = Clip(Fraction(FPS), n_frames, {"planes": Grid(Fraction(0), step, COUNT)})
     clip.save(out / "clip.json")
     layout = {"columns": COLUMNS, "width": width, "height": height}

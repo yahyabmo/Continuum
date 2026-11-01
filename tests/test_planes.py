@@ -50,7 +50,11 @@ def test_a_speck_of_noise_stays_transparent():
 def test_export_writes_what_the_page_reads(tmp_path):
     export(toy_take(n_frames=128, noise=0.0), tmp_path)
     image = cv2.imread(str(tmp_path / "atlas.webp"), cv2.IMREAD_UNCHANGED)
-    assert image.shape == (8 * HEIGHT, COLUMNS * WIDTH, 4)
+    assert image.shape == (8 * HEIGHT, COLUMNS * WIDTH, 3)
+    mask = cv2.imread(str(tmp_path / "mask.webp"), cv2.IMREAD_GRAYSCALE)
+    assert mask.shape == image.shape[:2]
+    assert mask[4, 4] == 0
+    assert mask[HEIGHT // 2, WIDTH // 2] == 255
     grid = Clip.load(tmp_path / "clip.json").grids["planes"]
     assert grid.n == COUNT
     assert float(grid.step) == stride(128) / 60

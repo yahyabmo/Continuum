@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { cellUv, colorFromQuery, type Layout, planeZ } from "./planes";
+import { cellUv, colorFromQuery, type Layout, planeZ, viewFromQuery } from "./planes";
 import { Grid, type GridData } from "./timeaxis";
 
 const SCALE = 0.01;
@@ -14,6 +14,7 @@ const canvas = document.querySelector<HTMLCanvasElement>("#scene")!;
 const spacingInput = document.querySelector<HTMLInputElement>("#spacing")!;
 const opacityInput = document.querySelector<HTMLInputElement>("#opacity")!;
 const backgroundInput = document.querySelector<HTMLInputElement>("#background")!;
+const viewInputs = document.querySelectorAll<HTMLInputElement>('input[name="view"]');
 const axis = document.querySelector<HTMLElement>("#axis")!;
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -66,10 +67,16 @@ async function start() {
     json<{ grids: { planes: GridData } }>("clip.json"),
   ]);
   const grid = new Grid(clip.grids.planes);
-  const texture = await new THREE.TextureLoader().loadAsync(`${base}/atlas.webp`);
+  const loader = new THREE.TextureLoader();
+  const [texture, mask] = await Promise.all([
+    loader.loadAsync(`${base}/atlas.webp`),
+    loader.loadAsync(`${base}/mask.webp`),
+  ]);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.generateMipmaps = false;
-  texture.minFilter = THREE.LinearFilter;
+  for (const image of [texture, mask]) {
+    image.generateMipmaps = false;
+    image.minFilter = THREE.LinearFilter;
+  }
 
   const material = new THREE.MeshBasicMaterial({
     map: texture,
@@ -95,6 +102,17 @@ async function start() {
   opacityInput.addEventListener("input", () => {
     material.opacity = Number(opacityInput.value);
   });
+
+  const showView = (view: string) => {
+    material.alphaMap = view === "image" ? null : mask;
+    material.needsUpdate = true;
+  };
+  const firstView = viewFromQuery(query.get("vue"));
+  showView(firstView);
+  for (const input of viewInputs) {
+    input.checked = input.value === firstView;
+    input.addEventListener("change", () => showView(input.value));
+  }
 
   const end = grid.time(grid.n - 1).toFixed(2).replace(".", ",");
   axis.textContent = `${grid.n} plans, de t = 0 à ${end} s`;

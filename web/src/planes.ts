@@ -22,6 +22,13 @@ export function colorFromQuery(value: string | null, fallback: string): string {
   return value && /^[0-9a-f]{6}$/i.test(value) ? `#${value.toLowerCase()}` : fallback;
 }
 
+export type View = "objet" | "image";
+
+/** View given in the address of the page, such as ?vue=image. */
+export function viewFromQuery(value: string | null): View {
+  return value === "image" ? "image" : "objet";
+}
+
 /** Position along the time axis, centred on the middle plane. */
 export function planeZ(index: number, count: number, spacing: number): number {
   return (index - (count - 1) / 2) * spacing;

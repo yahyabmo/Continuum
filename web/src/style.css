@@ -65,6 +65,30 @@ input[type="range"] {
   accent-color: var(--accent);
 }
 
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 4px;
+}
+
+legend {
+  padding: 0 0 2px;
+  font-size: 13px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+input[type="radio"] {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .color {
   grid-template-columns: 1fr auto;
   align-items: center;

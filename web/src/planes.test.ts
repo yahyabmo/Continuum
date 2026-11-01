@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { cellUv, colorFromQuery, planeZ } from "./planes";
+import { cellUv, colorFromQuery, planeZ, viewFromQuery } from "./planes";
+
+describe("viewFromQuery", () => {
+  it("reads the whole image view", () => {
+    expect(viewFromQuery("image")).toBe("image");
+  });
+
+  it("shows the object by default", () => {
+    expect(viewFromQuery(null)).toBe("objet");
+    expect(viewFromQuery("autre")).toBe("objet");
+  });
+});
 
 describe("colorFromQuery", () => {
   it("reads a colour", () => {
