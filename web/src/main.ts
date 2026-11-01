@@ -1,24 +1,31 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { cellUv, type Layout, planeZ } from "./planes";
+import { cellUv, colorFromQuery, type Layout, planeZ } from "./planes";
 import { Grid, type GridData } from "./timeaxis";
 
 const SCALE = 0.01;
 const DISTANCE = 9;
 const WIDE_ENOUGH = 1.4;
-const clipName = new URLSearchParams(location.search).get("clip") ?? "demo";
+const query = new URLSearchParams(location.search);
+const clipName = query.get("clip") ?? "demo";
 const base = `${import.meta.env.BASE_URL}clips/${clipName}`;
 
 const canvas = document.querySelector<HTMLCanvasElement>("#scene")!;
 const spacingInput = document.querySelector<HTMLInputElement>("#spacing")!;
 const opacityInput = document.querySelector<HTMLInputElement>("#opacity")!;
+const backgroundInput = document.querySelector<HTMLInputElement>("#background")!;
 const axis = document.querySelector<HTMLElement>("#axis")!;
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+const background = new THREE.Color();
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
+scene.background = background;
+
+backgroundInput.value = colorFromQuery(query.get("fond"), backgroundInput.value);
+background.set(backgroundInput.value);
+backgroundInput.addEventListener("input", () => background.set(backgroundInput.value));
 
 const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
 camera.position.set(6.2, 2.2, 6.2);

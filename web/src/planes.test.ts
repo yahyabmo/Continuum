@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { cellUv, planeZ } from "./planes";
+import { cellUv, colorFromQuery, planeZ } from "./planes";
+
+describe("colorFromQuery", () => {
+  it("reads a colour", () => {
+    expect(colorFromQuery("FFAA00", "#000000")).toBe("#ffaa00");
+  });
+
+  it("keeps the default without a valid colour", () => {
+    expect(colorFromQuery(null, "#000000")).toBe("#000000");
+    expect(colorFromQuery("rouge", "#000000")).toBe("#000000");
+    expect(colorFromQuery("fff", "#000000")).toBe("#000000");
+  });
+});
 
 describe("cellUv", () => {
   it("puts the first plane in the top left corner", () => {

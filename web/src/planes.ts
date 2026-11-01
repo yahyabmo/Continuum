@@ -17,6 +17,11 @@ export function cellUv(index: number, count: number, columns: number) {
   };
 }
 
+/** Colour given in the address of the page, such as ?fond=ffffff. */
+export function colorFromQuery(value: string | null, fallback: string): string {
+  return value && /^[0-9a-f]{6}$/i.test(value) ? `#${value.toLowerCase()}` : fallback;
+}
+
 /** Position along the time axis, centred on the middle plane. */
 export function planeZ(index: number, count: number, spacing: number): number {
   return (index - (count - 1) / 2) * spacing;
