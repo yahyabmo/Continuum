@@ -9,7 +9,7 @@ description = "Turn a short phone video into a volume where time is the third di
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-dependencies = []
+dependencies = ["av>=14", "numpy>=2", "opencv-python-headless>=4.9"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
