@@ -4,7 +4,7 @@ from continuum.baselines import brackets, crossfade
 from continuum.bench import noise_ceiling, score_crossfade, table
 from continuum.flow import dis_magnitude
 from continuum.metrics import beta, motion_mask, person_mask
-from continuum.synth import toy_take
+from continuum.synth import BAR_HEIGHT, BAR_TOP, BAR_WIDTH, bar_left, toy_take
 from continuum.timeaxis import split
 
 
@@ -45,6 +45,14 @@ def test_beta_separates_the_crossfade_from_the_truth_on_the_toy():
     assert mask.any()
     assert beta(faded, truth, faded, mask) == 1.0
     assert beta(truth.astype(np.float32), truth, faded, mask) == 0.0
+
+
+def test_the_texture_of_the_bar_moves_with_the_bar():
+    frames = toy_take(n_frames=110, noise=0.0).frames
+    rows = slice(BAR_TOP, BAR_TOP + BAR_HEIGHT)
+    patches = [frames[i, rows, bar_left(i) : bar_left(i) + BAR_WIDTH] for i in (100, 102)]
+    assert bar_left(100) != bar_left(102)
+    assert np.array_equal(patches[0], patches[1])
 
 
 def test_the_table_shows_a_missing_value():
