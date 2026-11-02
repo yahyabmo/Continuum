@@ -22,6 +22,14 @@ Un réseau qui apprend une vidéo produit-il de vraies images entre deux trames,
 
 Le protocole et ses seuils sont fixés avant toute mesure, dans [docs/EVALUATION.md](docs/EVALUATION.md). Ce qui n'est pas mesuré est listé dans [docs/LIMITS.md](docs/LIMITS.md).
 
+## Résultats
+
+Ce bloc est produit par `python -m continuum.registry` à partir de `results/`. Un test bloque toute mesure écrite ailleurs.
+
+<!-- résultats : début -->
+Aucun résultat publié pour l'instant.
+<!-- résultats : fin -->
+
 ## Lancer les tests
 
 ```bash
