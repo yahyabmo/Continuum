@@ -7,7 +7,7 @@ const SCALE = 0.01;
 const DISTANCE = 9;
 const WIDE_ENOUGH = 1.4;
 const query = new URLSearchParams(location.search);
-const clipName = query.get("clip") ?? "demo";
+const clipName = query.get("clip") ?? import.meta.env.VITE_CLIP ?? "demo";
 const base = `${import.meta.env.BASE_URL}clips/${clipName}`;
 
 const canvas = document.querySelector<HTMLCanvasElement>("#scene")!;
