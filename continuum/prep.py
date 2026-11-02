@@ -1,7 +1,8 @@
 """Turn a raw phone take into frames ready for measurement.
 
-A take starts with an empty background, then holds the clip itself. An uneven frame
-rate would shift the truth of a held-out frame, so a take is checked before use.
+The plate, the empty background, comes from a separate take of the same scene, or
+else from the first seconds of the take. An uneven frame rate would shift the truth
+of a held-out frame, so every take is checked before use.
 """
 
 from __future__ import annotations
@@ -115,16 +116,26 @@ def decode(path: Path, width: int = WIDTH, height: int = HEIGHT) -> np.ndarray:
     return np.stack(frames)
 
 
-def normalise(path: Path) -> Take:
-    """Decode a checked take, build its plate and keep the clip that follows."""
-    problems = check(probe(path))
+def _checked(path: Path, seconds: float) -> None:
+    problems = check(probe(path), seconds)
     if problems:
         raise ValueError(f"{path.name}: " + "; ".join(problems))
+
+
+def normalise(path: Path, plate: Path | None = None, start: float = LEAD_SECONDS) -> Take:
+    """Decode a checked take and keep the clip that begins start seconds in."""
+    _checked(path, start + CLIP_SECONDS)
     frames = decode(path)
-    lead = LEAD_SECONDS * FPS
-    # The last half second of the lead may already show the person arriving.
-    plate = np.median(frames[: lead - FPS // 2], axis=0).astype(np.uint8)
-    return Take(frames[lead : lead + CLIP_SECONDS * FPS], plate)
+    first = round(start * FPS)
+    if plate is None:
+        if first < FPS:
+            raise ValueError(f"{path.name}: a lead of {start} s is too short for a plate")
+        # The last half second of the lead may already show the person arriving.
+        background = np.median(frames[: first - FPS // 2], axis=0)
+    else:
+        _checked(plate, 1)
+        background = np.median(decode(plate), axis=0)
+    return Take(frames[first : first + CLIP_SECONDS * FPS], background.astype(np.uint8))
 
 
 def main() -> None:

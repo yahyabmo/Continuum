@@ -14,9 +14,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from continuum.bench import raw_path
+from continuum.bench import load_take
 from continuum.metrics import foreground
-from continuum.prep import FPS, Take, normalise
+from continuum.prep import FPS, Take
 from continuum.synth import toy_take
 from continuum.timeaxis import Clip, Grid
 
@@ -78,7 +78,7 @@ def main() -> None:
     if args.demo == bool(args.clip):
         parser.error("name a clip, or use --demo")
     name = "demo" if args.demo else args.clip
-    take = toy_take() if args.demo else normalise(raw_path(args.clip))
+    take = toy_take() if args.demo else load_take(args.clip)
     export(take, Path("web/public/clips") / name)
 
 

@@ -1,5 +1,8 @@
+import json
+
 import numpy as np
 
+from continuum import bench
 from continuum.baselines import brackets, crossfade
 from continuum.bench import noise_ceiling, score_crossfade, table
 from continuum.flow import dis_magnitude
@@ -65,3 +68,19 @@ def test_the_table_shows_a_missing_value():
         "noise_ceiling": 40.0,
     }
     assert "n/a" in table([row])
+
+
+def test_load_take_reads_the_plate_and_the_start_of_a_clip(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(bench, "RAW", tmp_path)
+    monkeypatch.setattr(bench, "CLIPS", tmp_path / "clips.json")
+    monkeypatch.setattr(bench, "normalise", lambda *args: calls.append(args))
+    for name in ("C1", "plaque1", "C2"):
+        (tmp_path / f"{name}.mp4").touch()
+    (tmp_path / "clips.json").write_text(json.dumps({"C1": {"plate": "plaque1", "start": 4.5}}))
+    bench.load_take("C1")
+    bench.load_take("C2")
+    assert calls == [
+        (tmp_path / "C1.mp4", tmp_path / "plaque1.mp4", 4.5),
+        (tmp_path / "C2.mp4", None, 3),
+    ]

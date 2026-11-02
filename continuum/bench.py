@@ -18,11 +18,13 @@ import numpy as np
 from continuum.baselines import brackets, crossfade
 from continuum.flow import dis_magnitude
 from continuum.metrics import PooledPsnr, motion_mask, person_mask
-from continuum.prep import Take, normalise
+from continuum.prep import LEAD_SECONDS, Take, normalise
 from continuum.synth import toy_take
 from continuum.timeaxis import split
 
 RAW = Path("data/raw")
+# Where each clip starts and which plate it uses: {"C1": {"plate": "plaque1", "start": 4.5}}
+CLIPS = RAW / "clips.json"
 
 
 def noise_ceiling(take: Take, step: int = 10) -> float | None:
@@ -83,6 +85,13 @@ def raw_path(name: str) -> Path:
     return found[0]
 
 
+def load_take(name: str) -> Take:
+    clips = json.loads(CLIPS.read_text(encoding="utf-8")) if CLIPS.exists() else {}
+    settings = clips.get(name, {})
+    plate = raw_path(settings["plate"]) if "plate" in settings else None
+    return normalise(raw_path(name), plate, settings.get("start", LEAD_SECONDS))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("clips", nargs="*", help="take names in data/raw, such as C1 C2 C3")
@@ -97,7 +106,7 @@ def main() -> None:
         print(table(rows))
         return
 
-    rows = [score_crossfade(name, normalise(raw_path(name))) for name in args.clips]
+    rows = [score_crossfade(name, load_take(name)) for name in args.clips]
     print(table(rows))
     report = {
         "test": "crossfade",

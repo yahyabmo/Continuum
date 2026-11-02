@@ -116,3 +116,33 @@ def test_a_rate_that_switches_between_30_and_60_fps_is_caught():
     assert fps == pytest.approx(30)
     assert irregular == pytest.approx(130 / 299)
     assert any("irregular" in problem for problem in check(fine(irregular=irregular)))
+
+
+def write_plate(path, n_frames=60):
+    with av.open(str(path), "w") as container:
+        stream = container.add_stream("libx264", rate=FPS)
+        stream.width, stream.height, stream.pix_fmt = 216, 384, "yuv420p"
+        for _ in range(n_frames):
+            image = np.full((384, 216, 3), 30, dtype=np.uint8)
+            for packet in stream.encode(av.VideoFrame.from_ndarray(image, format="rgb24")):
+                container.mux(packet)
+        for packet in stream.encode():
+            container.mux(packet)
+
+
+def test_a_separate_plate_and_a_chosen_start_are_used(tmp_path):
+    take_path, plate_path = tmp_path / "take.mp4", tmp_path / "plate.mp4"
+    write_take(take_path, (LEAD_SECONDS + CLIP_SECONDS) * FPS)
+    write_plate(plate_path)
+    take = normalise(take_path, plate_path, start=LEAD_SECONDS - 1)
+    assert take.frames.shape[0] == CLIP_SECONDS * FPS
+    assert abs(int(take.plate[150, 100, 0]) - 30) < 8
+    assert abs(int(take.frames[0, 150, 100, 0]) - 60) < 8
+    assert abs(int(take.frames[FPS, 150, 100, 0]) - 220) < 20
+
+
+def test_without_a_plate_the_lead_must_be_long_enough(tmp_path):
+    path = tmp_path / "take.mp4"
+    write_take(path, (LEAD_SECONDS + CLIP_SECONDS) * FPS)
+    with pytest.raises(ValueError, match="lead"):
+        normalise(path, start=0.5)
