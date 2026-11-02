@@ -8,7 +8,7 @@
   "enable_gpu": true,
   "enable_internet": true,
   "machine_shape": "NvidiaTeslaT4",
-  "dataset_sources": [],
+  "dataset_sources": ["yahyabelhajjam/continuum-clips"],
   "competition_sources": [],
   "kernel_sources": ["yahyabelhajjam/continuum-weights"]
 }

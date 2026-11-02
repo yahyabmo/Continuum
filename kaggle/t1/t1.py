@@ -17,6 +17,7 @@ from safetensors import safe_open
 from safetensors.torch import load_file
 from torchvision.models.optical_flow import Raft_Large_Weights, raft_large
 
+from continuum import bench
 from continuum.metrics import select_beta_frames
 from continuum.synth import BAR_HEIGHT, BAR_TOP, BAR_WIDTH, bar_left, toy_take
 from continuum.t1 import score_clip, verdict
@@ -31,6 +32,8 @@ SEA_RAFT_URL, SEA_RAFT_SHA = (
     "9137517ba24e628442aec097d3afe71d03503b75",
 )
 SEA_RAFT_SCALE = 0
+SCORED = ["C1", "C2", "C3", "C4", "C5", "C6"]
+QUARTER = ["C2", "C4"]
 
 torch.set_grad_enabled(False)
 torch.manual_seed(0)
@@ -130,22 +133,45 @@ def flow_check(sea_raft: SeaRaft, take) -> dict:
     return {str(s): float(np.median(sea_raft(a, b, s)[rows, x : x + BAR_WIDTH])) for s in (0, 1)}
 
 
+def clips_folder() -> Path | None:
+    found = next(Path("/kaggle/input").rglob("clips.json"), None)
+    return found.parent if found else None
+
+
+def takes(folder: Path | None) -> dict:
+    """The scored clips of the private dataset, or the synthetic take without it."""
+    if folder is None:
+        return {"toy": toy_take()}
+    bench.RAW, bench.CLIPS = folder, folder / "clips.json"
+    named = json.loads(bench.CLIPS.read_text(encoding="utf-8"))
+    return {name: bench.load_take(name) for name in SCORED if name in named}
+
+
 def main() -> None:
     started = time.perf_counter()
     rife, sea_raft, score_flow = Rife(), SeaRaft(), ScoreFlow()
-    take = toy_take()
-    checks = flow_check(sea_raft, take)
-    rows = [score_clip("toy", take, rife, sea_raft, score_flow)]
+    checks = flow_check(sea_raft, toy_take())
+    folder = clips_folder()
+    clips = takes(folder)
+    rows = [score_clip(name, take, rife, sea_raft, score_flow) for name, take in clips.items()]
+    quarter = [
+        score_clip(name, clips[name], rife, sea_raft, score_flow, keep_every=4)
+        for name in QUARTER
+        if name in clips
+    ]
     energies = {row["clip"]: {int(k): v for k, v in row.pop("energy").items()} for row in rows}
+    for row in quarter:
+        row.pop("energy")
     report = {
         "commit": COMMIT,  # noqa: F821
-        "provisional": True,
+        "provisional": folder is None,
         "seed": 0,
         "gpu": torch.cuda.get_device_name(0),
         "seconds": round(time.perf_counter() - started, 1),
         "peak_memory_gb": round(torch.cuda.max_memory_allocated() / 1024**3, 2),
         "flow_check_median_px": checks,
         "rows": rows,
+        "quarter": quarter,
         "verdict": verdict(rows),
         "beta_frames": select_beta_frames(energies),
     }

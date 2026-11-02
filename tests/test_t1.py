@@ -68,3 +68,11 @@ def test_the_verdict_needs_four_clips():
 
 def test_mean_error_without_values_has_no_value():
     assert MeanError().value is None
+
+
+def test_keeping_one_frame_in_four_scores_the_three_in_between():
+    take = toy_take(n_frames=33)
+    result = score_clip("toy", take, crossfade, fake_norm, fake_flow, keep_every=4)
+    assert result["keep_every"] == 4
+    assert result["held"] == 24
+    assert set(result["energy"]) == {i for i in range(1, 32) if i % 4}
