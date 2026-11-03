@@ -29,6 +29,13 @@ export function viewFromQuery(value: string | null): View {
   return value === "image" ? "image" : "objet";
 }
 
+export type Render = "plans" | "volume";
+
+/** Rendering given in the address of the page, such as ?rendu=volume. */
+export function renderFromQuery(value: string | null): Render {
+  return value === "volume" ? "volume" : "plans";
+}
+
 /** Position along the time axis, centred on the middle plane. */
 export function planeZ(index: number, count: number, spacing: number): number {
   return (index - (count - 1) / 2) * spacing;

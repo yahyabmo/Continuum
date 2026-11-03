@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { cellUv, colorFromQuery, planeZ, viewFromQuery } from "./planes";
+import { cellUv, colorFromQuery, planeZ, renderFromQuery, viewFromQuery } from "./planes";
+
+describe("renderFromQuery", () => {
+  it("reads the volume", () => {
+    expect(renderFromQuery("volume")).toBe("volume");
+  });
+
+  it("shows the planes by default", () => {
+    expect(renderFromQuery(null)).toBe("plans");
+    expect(renderFromQuery("autre")).toBe("plans");
+  });
+});
 
 describe("viewFromQuery", () => {
   it("reads the whole image view", () => {

@@ -10,7 +10,18 @@
     <canvas id="scene" aria-label="Vidéo empilée en plans le long du temps"></canvas>
     <aside class="panel">
       <h1>Continuum</h1>
-      <p class="tag">Démo : aperçu en plans, rien n'est mesuré ici.</p>
+      <p class="tag">Démo : rien n'est mesuré ici.</p>
+      <fieldset>
+        <legend>Rendu</legend>
+        <label class="choice">
+          <input type="radio" name="render" value="plans" checked />
+          64 plans
+        </label>
+        <label class="choice">
+          <input type="radio" name="render" value="volume" />
+          Volume continu
+        </label>
+      </fieldset>
       <label>
         Espacement
         <input id="spacing" type="range" min="0.2" max="3" step="0.05" value="1" />
@@ -35,6 +46,7 @@
         <input id="background" type="color" value="#000000" />
       </label>
       <p class="axis" id="axis"></p>
+      <p class="axis" id="status" aria-live="polite"></p>
     </aside>
     <script type="module" src="/src/main.ts"></script>
   </body>

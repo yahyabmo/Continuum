@@ -41,10 +41,11 @@ make check
 
 ```bash
 make planes-demo
+make bake-demo
 make web
 ```
 
-Elle montre un clip de synthèse en 64 plans. Aucun chiffre n'en sort.
+Elle montre un clip de synthèse en 64 plans ou en volume continu. Aucun chiffre n'en sort.
 
 ## Licence
 

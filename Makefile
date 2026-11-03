@@ -1,6 +1,6 @@
 PYTHON := .venv/bin/python
 
-.PHONY: setup check take crossfade demo planes-demo web sheet results
+.PHONY: setup check take crossfade demo planes-demo bake-demo web sheet results
 
 setup:
 	python3 -m venv .venv
@@ -21,6 +21,9 @@ demo:
 
 planes-demo:
 	$(PYTHON) -m continuum.planes --demo
+
+bake-demo:
+	$(PYTHON) -m continuum.bake --demo
 
 web:
 	cd web && npm install && npm run dev
