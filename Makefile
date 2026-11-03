@@ -1,6 +1,6 @@
 PYTHON := .venv/bin/python
 
-.PHONY: setup check take crossfade demo planes-demo bake-demo web sheet results
+.PHONY: setup check take crossfade demo planes-demo bake-demo web measure sheet results
 
 setup:
 	python3 -m venv .venv
@@ -27,6 +27,9 @@ bake-demo:
 
 web:
 	cd web && npm install && npm run dev
+
+measure:
+	$(PYTHON) -m continuum.measure $(ARGS)
 
 sheet:
 	$(PYTHON) -m continuum.sheet $(CLIPS)

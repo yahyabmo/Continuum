@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { journal, journalErrors } from "./journal";
 import { frameStats } from "./measure";
 import {
   cellUv,
@@ -16,7 +17,7 @@ const SCALE = 0.01;
 const LENGTH = 6;
 const DISTANCE = 9;
 const WIDE_ENOUGH = 1.4;
-const MEASURE_WARMUP_MS = 1000;
+const MEASURE_WARMUP_MS = 2000;
 const MEASURE_MS = 10000;
 const query = new URLSearchParams(location.search);
 const clipName = query.get("clip") ?? import.meta.env.VITE_CLIP ?? "demo";
@@ -30,6 +31,8 @@ const viewInputs = document.querySelectorAll<HTMLInputElement>('input[name="view
 const renderInputs = document.querySelectorAll<HTMLInputElement>('input[name="render"]');
 const axis = document.querySelector<HTMLElement>("#axis")!;
 const status = document.querySelector<HTMLElement>("#status")!;
+
+journalErrors();
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -75,6 +78,12 @@ function fit() {
   camera.position.setLength(DISTANCE * Math.max(1, WIDE_ENOUGH / camera.aspect));
 }
 
+function gpuName(): string {
+  const gl = renderer.getContext();
+  const info = gl.getExtension("WEBGL_debug_renderer_info");
+  return String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+}
+
 function seconds(value: number): string {
   return value.toFixed(2).replace(".", ",");
 }
@@ -86,7 +95,7 @@ function measure(mode: string) {
   let last = -1;
   controls.autoRotate = true;
   controls.autoRotateSpeed = 6;
-  status.textContent = "Mesure en cours, ne touche à rien pendant 11 s…";
+  status.textContent = "Mesure en cours, ne touche à rien pendant 12 s…";
   return (time: number) => {
     if (start < 0) start = time;
     if (last >= 0 && time - start > MEASURE_WARMUP_MS) deltas.push(time - last);
@@ -95,11 +104,13 @@ function measure(mode: string) {
     controls.autoRotate = false;
     const stats = frameStats(deltas);
     const size = renderer.getDrawingBufferSize(new THREE.Vector2());
-    const report = { mode, width: size.x, height: size.y, ...stats };
+    const report = { mode, width: size.x, height: size.y, gpu: gpuName(), ...stats };
     console.log(JSON.stringify(report));
+    journal({ type: "mesure", clip: clipName, ...report });
     status.textContent =
       `Mesure ${mode}, ${size.x}×${size.y} px : médiane ${stats.median.toFixed(1)} ms, ` +
-      `p95 ${stats.p95.toFixed(1)} ms, ${stats.slow} images au-delà de 33 ms sur ${stats.frames}.`;
+      `p95 ${stats.p95.toFixed(1)} ms, ${stats.slow} images au-delà de 33 ms sur ${stats.frames}, ` +
+      `pause la plus longue ${stats.longest.toFixed(0)} ms.`;
     return true;
   };
 }
@@ -165,8 +176,11 @@ async function start() {
   const showVolume = async () => {
     if (!volume) {
       status.textContent = "Chargement du volume…";
+      const started = performance.now();
       volumeLayout = await json<VolumeLayout>("volume.json");
       const data = await loadVolume(`${base}/volume.bin.gz`, volumeLayout);
+      const loadMs = Math.round(performance.now() - started);
+      journal({ type: "volume", clip: clipName, depth: volumeLayout.depth, ms: loadMs });
       volume = new THREE.Mesh(new THREE.BoxGeometry(), volumeMaterial(data));
       scene.add(volume);
       const end = seconds(new Grid(volumeLayout.grid).time(volumeLayout.depth - 1));
@@ -210,6 +224,7 @@ async function start() {
   axis.textContent = `${grid.n} plans, de t = 0 à ${seconds(grid.time(grid.n - 1))} s`;
   const mode = renderFromQuery(query.get("rendu"));
   await showRender(mode).catch(async (error: Error) => {
+    journal({ type: "erreur", message: error.message });
     await showRender("plans");
     status.textContent = error.message;
   });
@@ -225,5 +240,6 @@ async function start() {
 window.addEventListener("resize", fit);
 fit();
 start().catch((error: Error) => {
+  journal({ type: "erreur", message: error.message });
   status.textContent = error.message;
 });

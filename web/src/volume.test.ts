@@ -30,6 +30,8 @@ describe("sliceOpacity", () => {
 describe("frameStats", () => {
   it("reads the median, the 95th percentile and the slow frames", () => {
     const deltas = [...Array(95).fill(16.7), ...Array(5).fill(50)];
-    expect(frameStats(deltas)).toEqual({ frames: 100, median: 16.7, p95: 50, slow: 5 });
+    const stats = frameStats(deltas);
+    expect(stats).toMatchObject({ frames: 100, median: 16.7, p95: 50, slow: 5, longest: 50 });
+    expect(stats.seconds).toBeCloseTo((95 * 16.7 + 5 * 50) / 1000, 9);
   });
 });

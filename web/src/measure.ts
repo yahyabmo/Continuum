@@ -4,6 +4,8 @@ export interface FrameStats {
   median: number;
   p95: number;
   slow: number;
+  longest: number;
+  seconds: number;
 }
 
 const BUDGET_MS = 33;
@@ -19,5 +21,7 @@ export function frameStats(deltas: number[]): FrameStats {
     median: quantile(sorted, 0.5),
     p95: quantile(sorted, 0.95),
     slow: sorted.filter((d) => d > BUDGET_MS).length,
+    longest: sorted[sorted.length - 1],
+    seconds: deltas.reduce((sum, d) => sum + d, 0) / 1000,
   };
 }
